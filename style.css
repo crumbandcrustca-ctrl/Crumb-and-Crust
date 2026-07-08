@@ -314,6 +314,17 @@ h3.display {
   padding: 1rem 0 2.5rem;
 }
 .theme-dark .mobile-nav { background: var(--forest); }
+.theme-dark .mobile-nav .btn-primary {
+    background: var(--cream);
+    color: var(--forest-deep);
+    border: 2px solid var(--cream);
+}
+
+.theme-dark .mobile-nav .btn-primary:hover {
+    background: var(--paper);
+    color: var(--forest-deep);
+    border-color: var(--paper);
+}
 .mobile-nav.open { opacity: 1; visibility: visible; transform: translateY(0); }
 .mobile-nav .container { display: flex; flex-direction: column; gap: 0.1rem; }
 .mobile-nav a, .mobile-nav .mobile-toggle {
