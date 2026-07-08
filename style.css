@@ -244,8 +244,6 @@ h3.display {
 .nav-links a:hover { color: var(--teal); }
 .theme-dark .nav-links a:hover { color: var(--cream); }
 
-.nav-links .btn-primary { color: var(--cream); }
-
 .dropdown { position: relative; }
 .dropdown-caret { font-size: 0.7em; transition: transform 0.16s ease; }
 .dropdown-menu {
