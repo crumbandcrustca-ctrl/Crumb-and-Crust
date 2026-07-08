@@ -246,7 +246,7 @@ h3.display {
 
 /***** Navigation CTA Fix *****/
 .nav-links .btn-primary {
-  color: var(--cream);
+  color: var(--forest-deep);
 }
 
 /* On dark-themed pages (About & Contact), use dark text on the cream button */
