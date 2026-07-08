@@ -179,6 +179,8 @@ h3.display {
 }
 .theme-dark .btn-primary:hover {
   background: var(--paper);
+  color: var(--forest-deep);
+  border: 2px solid var(--paper);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lift);
 }
