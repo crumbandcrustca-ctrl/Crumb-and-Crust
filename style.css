@@ -171,17 +171,6 @@ h3.display {
   color: var(--cream);
 }
 .btn-primary:hover { background: var(--forest-deep); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
-/* On dark-green pages (about/contact) the header itself is forest green, so the
-   default button would vanish into it. Invert it there so it always pops. */
-.theme-dark .btn-primary {
-  background: var(--cream);
-  color: var(--forest-deep);
-}
-.theme-dark .btn-primary:hover {
-  background: var(--paper);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-}
 .btn-outline {
   background: transparent;
   border-color: currentColor;
@@ -244,11 +233,7 @@ h3.display {
 .nav-links a:hover { color: var(--teal); }
 .theme-dark .nav-links a:hover { color: var(--cream); }
 
-/***** Navigation CTA Fix *****/
-.nav-links .btn-primary {
-  color: var(--forest-deep);
-}
-
+.nav-links .btn-primary { color: var(--cream); }
 
 .dropdown { position: relative; }
 .dropdown-caret { font-size: 0.7em; transition: transform 0.16s ease; }
@@ -590,39 +575,8 @@ h3.display {
   border-radius: var(--radius-md);
   padding: 0.9rem 1.1rem;
 }
-.order-item-info h4 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.2rem; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.order-item-info h4 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.2rem; }
 .order-item-info p { font-size: 0.85rem; color: #666;}
-.item-price { font-family: var(--font-body); font-size: 0.85rem; font-weight: 700; color: var(--teal-deep); }
-.qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.qty-btn:disabled:hover { background: var(--paper); color: var(--forest); }
-
-.section-heading-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.1rem;
-}
-.section-heading-row h2 { margin-bottom: 0; }
-.item-counter {
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--teal-deep);
-  background: var(--cream);
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-}
-.item-counter.at-max { color: #9c3b23; background: #f6e3e0; }
-
-.order-total {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--charcoal);
-  margin: 1.5rem 0 1rem;
-}
 .qty-stepper { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
 .qty-btn {
   width: 34px; height: 34px;
