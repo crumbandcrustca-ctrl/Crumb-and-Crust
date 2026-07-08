@@ -121,64 +121,102 @@
           </div>
 
           <div class="form-section">
-            <h2 class="display" style="font-size:1.3rem;">what would you like?</h2>
+            <div class="section-heading-row">
+              <h2 class="display" style="font-size:1.3rem;">what would you like?</h2>
+              <span id="itemCounter" class="item-counter">0 of 4 selected</span>
+            </div>
+            <p class="prose" style="font-size:0.88rem; margin-bottom:1.25rem;">Orders are limited to 4 loaves/focaccias total, so everyone gets a fair shot at fresh bread.</p>
             <div class="order-items">
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>OG Sourdough</h4>
+                  <h4>OG Sourdough <span class="item-price">$10.00</span></h4>
                   <p>Naturally leavened, tangy crumb, crackled crust.</p>
                 </div>
                 <div class="qty-stepper">
                   <button type="button" class="qty-btn qty-minus" aria-label="Decrease OG Sourdough quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="OG Sourdough" value="0" min="0" max="10" readonly aria-label="OG Sourdough quantity">
+                  <input type="number" class="qty-input" name="OG Sourdough" data-price="10.00" value="0" min="0" max="4" readonly aria-label="OG Sourdough quantity">
                   <button type="button" class="qty-btn qty-plus" aria-label="Increase OG Sourdough quantity">+</button>
                 </div>
               </div>
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Rosemary Sourdough</h4>
+                  <h4>Rosemary Sourdough <span class="item-price">$12.00</span></h4>
                   <p>Fresh rosemary folded into the classic base.</p>
                 </div>
                 <div class="qty-stepper">
                   <button type="button" class="qty-btn qty-minus" aria-label="Decrease Rosemary Sourdough quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Rosemary Sourdough" value="0" min="0" max="10" readonly aria-label="Rosemary Sourdough quantity">
+                  <input type="number" class="qty-input" name="Rosemary Sourdough" data-price="12.00" value="0" min="0" max="4" readonly aria-label="Rosemary Sourdough quantity">
                   <button type="button" class="qty-btn qty-plus" aria-label="Increase Rosemary Sourdough quantity">+</button>
                 </div>
               </div>
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>OG Focaccia</h4>
+                  <h4>OG Focaccia <span class="item-price">Small &middot; $6.00</span></h4>
                   <p>Olive oil, flaky sea salt, pillowy crumb.</p>
                 </div>
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease OG Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="OG Focaccia" value="0" min="0" max="10" readonly aria-label="OG Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase OG Focaccia quantity">+</button>
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small OG Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="OG Focaccia (Small)" data-price="6.00" value="0" min="0" max="4" readonly aria-label="Small OG Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small OG Focaccia quantity">+</button>
                 </div>
               </div>
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Rosemary Focaccia</h4>
+                  <h4>OG Focaccia <span class="item-price">Large &middot; $12.00</span></h4>
+                  <p>Olive oil, flaky sea salt, pillowy crumb.</p>
+                </div>
+                <div class="qty-stepper">
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large OG Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="OG Focaccia (Large)" data-price="12.00" value="0" min="0" max="4" readonly aria-label="Large OG Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large OG Focaccia quantity">+</button>
+                </div>
+              </div>
+              <div class="order-item">
+                <div class="order-item-info">
+                  <h4>Rosemary Focaccia <span class="item-price">Small &middot; $7.50</span></h4>
                   <p>Topped with fresh rosemary and flaky salt.</p>
                 </div>
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Rosemary Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Rosemary Focaccia" value="0" min="0" max="10" readonly aria-label="Rosemary Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Rosemary Focaccia quantity">+</button>
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small Rosemary Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="Rosemary Focaccia (Small)" data-price="7.50" value="0" min="0" max="4" readonly aria-label="Small Rosemary Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small Rosemary Focaccia quantity">+</button>
                 </div>
               </div>
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Margherita Focaccia</h4>
+                  <h4>Rosemary Focaccia <span class="item-price">Large &middot; $14.00</span></h4>
+                  <p>Topped with fresh rosemary and flaky salt.</p>
+                </div>
+                <div class="qty-stepper">
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large Rosemary Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="Rosemary Focaccia (Large)" data-price="14.00" value="0" min="0" max="4" readonly aria-label="Large Rosemary Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large Rosemary Focaccia quantity">+</button>
+                </div>
+              </div>
+              <div class="order-item">
+                <div class="order-item-info">
+                  <h4>Margherita Focaccia <span class="item-price">Small &middot; $8.00</span></h4>
                   <p>Crushed tomato, mozzarella, fresh basil.</p>
                 </div>
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Margherita Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Margherita Focaccia" value="0" min="0" max="10" readonly aria-label="Margherita Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Margherita Focaccia quantity">+</button>
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small Margherita Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="Margherita Focaccia (Small)" data-price="8.00" value="0" min="0" max="4" readonly aria-label="Small Margherita Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small Margherita Focaccia quantity">+</button>
+                </div>
+              </div>
+              <div class="order-item">
+                <div class="order-item-info">
+                  <h4>Margherita Focaccia <span class="item-price">Large &middot; $15.00</span></h4>
+                  <p>Crushed tomato, mozzarella, fresh basil.</p>
+                </div>
+                <div class="qty-stepper">
+                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large Margherita Focaccia quantity">&minus;</button>
+                  <input type="number" class="qty-input" name="Margherita Focaccia (Large)" data-price="15.00" value="0" min="0" max="4" readonly aria-label="Large Margherita Focaccia quantity">
+                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large Margherita Focaccia quantity">+</button>
                 </div>
               </div>
             </div>
+            <div id="orderTotal" class="order-total">Estimated total: $0.00</div>
           </div>
 
           <div class="form-section">

@@ -84,11 +84,14 @@ const ORDER_SETTINGS = {
   limitedCapacityNote: true, // set to false to hide the "limited spots" line below
 };
 
+const MAX_ITEMS_PER_ORDER = 4; // matches your "Product (4 maximum)" rule from the old order form
+const DELIVERY_FEE = 4;        // dollars, added to the estimated total when Delivery is selected
+
 // EDIT ME: after you create a free form at https://formspree.io and connect
 // crumbandcrustca@gmail.com, paste your form endpoint here (looks like
 // "https://formspree.io/f/abcduvwx"). Until then, the form will show a
 // friendly reminder instead of trying to send.
-const FORM_ENDPOINT = 'https://formspree.io/f/meebdven';
+const FORM_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
 
 function initOrderForm(form) {
   renderStatusBanner();
@@ -142,20 +145,21 @@ function populatePickupDates() {
   });
 }
 
+function updateDeliveryFieldsVisibility() {
+  const deliveryFields = document.getElementById('deliveryFields');
+  if (!deliveryFields) return;
+  const checked = document.querySelector('input[name="Fulfillment"]:checked');
+  const isDelivery = !!checked && checked.value === 'Delivery';
+  deliveryFields.classList.toggle('show', isDelivery);
+  deliveryFields.querySelectorAll('input').forEach((i) => { i.required = isDelivery; });
+  updateOrderTotal();
+}
+
 function wireDeliveryToggle() {
   const radios = document.querySelectorAll('input[name="Fulfillment"]');
-  const deliveryFields = document.getElementById('deliveryFields');
-  if (!radios.length || !deliveryFields) return;
-
-  const update = () => {
-    const checked = document.querySelector('input[name="Fulfillment"]:checked');
-    deliveryFields.classList.toggle('show', !!checked && checked.value === 'Delivery');
-    deliveryFields.querySelectorAll('input').forEach((i) => {
-      i.required = checked && checked.value === 'Delivery';
-    });
-  };
-  radios.forEach((r) => r.addEventListener('change', update));
-  update();
+  if (!radios.length) return;
+  radios.forEach((r) => r.addEventListener('change', updateDeliveryFieldsVisibility));
+  updateDeliveryFieldsVisibility();
 }
 
 function wireQtySteppers() {
@@ -163,16 +167,64 @@ function wireQtySteppers() {
     const input = stepper.querySelector('.qty-input');
     const minus = stepper.querySelector('.qty-minus');
     const plus = stepper.querySelector('.qty-plus');
-    const max = parseInt(input.max || '10', 10);
-    const min = parseInt(input.min || '0', 10);
 
     minus.addEventListener('click', () => {
-      input.value = Math.max(min, parseInt(input.value || '0', 10) - 1);
+      input.value = Math.max(0, parseInt(input.value || '0', 10) - 1);
+      refreshItemLimits();
     });
     plus.addEventListener('click', () => {
-      input.value = Math.min(max, parseInt(input.value || '0', 10) + 1);
+      if (currentItemTotal() >= MAX_ITEMS_PER_ORDER) return;
+      input.value = Math.min(parseInt(input.max || '4', 10), parseInt(input.value || '0', 10) + 1);
+      refreshItemLimits();
     });
   });
+
+  refreshItemLimits();
+}
+
+function currentItemTotal() {
+  return Array.from(document.querySelectorAll('.qty-input'))
+    .reduce((sum, i) => sum + (parseInt(i.value, 10) || 0), 0);
+}
+
+function refreshItemLimits() {
+  const total = currentItemTotal();
+
+  const counter = document.getElementById('itemCounter');
+  if (counter) {
+    counter.textContent = `${total} of ${MAX_ITEMS_PER_ORDER} selected`;
+    counter.classList.toggle('at-max', total >= MAX_ITEMS_PER_ORDER);
+  }
+
+  document.querySelectorAll('.qty-stepper').forEach((stepper) => {
+    const input = stepper.querySelector('.qty-input');
+    const qty = parseInt(input.value, 10) || 0;
+    const itemMax = parseInt(input.max, 10) || MAX_ITEMS_PER_ORDER;
+    stepper.querySelector('.qty-plus').disabled = qty >= itemMax || total >= MAX_ITEMS_PER_ORDER;
+    stepper.querySelector('.qty-minus').disabled = qty <= 0;
+  });
+
+  updateOrderTotal();
+}
+
+function updateOrderTotal() {
+  const totalEl = document.getElementById('orderTotal');
+  if (!totalEl) return;
+
+  let sum = 0;
+  document.querySelectorAll('.qty-input').forEach((input) => {
+    const price = parseFloat(input.dataset.price || '0');
+    const qty = parseInt(input.value, 10) || 0;
+    sum += price * qty;
+  });
+
+  const checked = document.querySelector('input[name="Fulfillment"]:checked');
+  const isDelivery = !!checked && checked.value === 'Delivery';
+  if (isDelivery) sum += DELIVERY_FEE;
+
+  totalEl.textContent = isDelivery
+    ? `Estimated total: $${sum.toFixed(2)} (includes $${DELIVERY_FEE.toFixed(2)} delivery)`
+    : `Estimated total: $${sum.toFixed(2)}`;
 }
 
 function wireSubmit(form) {
@@ -187,6 +239,10 @@ function wireSubmit(form) {
     const totalItems = qtyInputs.reduce((sum, i) => sum + (parseInt(i.value, 10) || 0), 0);
     if (totalItems === 0) {
       showMessage('Add at least one item to your order before sending it in.', 'warning');
+      return;
+    }
+    if (totalItems > MAX_ITEMS_PER_ORDER) {
+      showMessage(`Orders are limited to ${MAX_ITEMS_PER_ORDER} loaves/focaccias at a time \u2014 please adjust your quantities.`, 'warning');
       return;
     }
     if (!form.checkValidity()) {
@@ -211,8 +267,8 @@ function wireSubmit(form) {
       if (res.ok) {
         showMessage("Thanks! Your order is in. We'll follow up by phone or email to confirm.", 'success');
         form.reset();
-        wireDeliveryToggle();
-        qtyInputs.forEach((i) => (i.value = 0));
+        updateDeliveryFieldsVisibility();
+        refreshItemLimits();
       } else {
         showMessage('Something went wrong sending that. Please try again, or email crumbandcrustca@gmail.com directly.', 'error');
       }

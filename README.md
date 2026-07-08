@@ -47,6 +47,19 @@ That's it — orders will land in your inbox with the customer's info, pickup/de
 
 **If you end up hosting on Netlify specifically**, there's an even simpler option that skips Formspree entirely (Netlify reads the form for you) — just ask and it's a small edit.
 
+## Changing prices or the 4-item limit
+
+Also near the top of `script.js`:
+
+```js
+const MAX_ITEMS_PER_ORDER = 4; // matches your "Product (4 maximum)" rule from the old order form
+const DELIVERY_FEE = 4;        // dollars, added to the estimated total when Delivery is selected
+```
+
+Change `4` to whatever cap you want — the form re-checks this everywhere (the counter, the +/- buttons, and the final submit) so it stays consistent.
+
+To change an individual item's price, open `order.html`, find the item (e.g. `Rosemary Focaccia (Large)`), and update the `data-price="14.00"` attribute on its quantity input, plus the price shown next to its name just above it. Both need to match, since one is what's shown to customers and the other is what the live total actually calculates from.
+
 ## Pausing or limiting orders
 
 Near the top of `script.js`:
