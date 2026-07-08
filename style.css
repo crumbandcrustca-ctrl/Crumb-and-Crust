@@ -249,10 +249,6 @@ h3.display {
   color: var(--forest-deep);
 }
 
-/* On dark-themed pages (About & Contact), use dark text on the cream button */
-.theme-dark .nav-links .btn-primary {
-  color: var(--forest-deep);
-}
 
 .dropdown { position: relative; }
 .dropdown-caret { font-size: 0.7em; transition: transform 0.16s ease; }
