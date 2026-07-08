@@ -91,7 +91,7 @@ const DELIVERY_FEE = 4;        // dollars, added to the estimated total when Del
 // crumbandcrustca@gmail.com, paste your form endpoint here (looks like
 // "https://formspree.io/f/abcduvwx"). Until then, the form will show a
 // friendly reminder instead of trying to send.
-const FORM_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+const FORM_ENDPOINT = 'https://formspree.io/f/meebdven';
 
 function initOrderForm(form) {
   renderStatusBanner();
