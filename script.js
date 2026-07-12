@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // EDIT ME: flip these whenever your week fills up or you need a break.
 const ORDER_SETTINGS = {
-  acceptingOrders: true,     // set to false to close the form and show a "not taking orders" message
+  acceptingOrders: false,     // set to false to close the form and show a "not taking orders" message
   limitedCapacityNote: true, // set to false to hide the "limited spots" line below
 };
 
