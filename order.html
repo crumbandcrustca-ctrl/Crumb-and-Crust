@@ -26,21 +26,26 @@
       <a href="index.html">home</a>
       <a href="about.html">about our team</a>
       <a href="contact.html">contact us</a>
+
       <div class="dropdown">
         <button class="nav-link" data-dropdown-toggle aria-haspopup="true" aria-expanded="false" type="button">
           menu <span class="dropdown-caret">▾</span>
         </button>
+
         <div class="dropdown-menu">
           <a href="menu.html">all breads</a>
           <a href="sourdough.html">sourdough</a>
           <a href="focaccia.html">focaccia</a>
         </div>
       </div>
+
       <a href="order.html" class="btn btn-primary">order now</a>
     </nav>
 
     <button class="hamburger" aria-label="Open menu" aria-expanded="false" type="button">
-      <span></span><span></span><span></span>
+      <span></span>
+      <span></span>
+      <span></span>
     </button>
   </div>
 </header>
@@ -50,12 +55,17 @@
     <a href="index.html">Home</a>
     <a href="about.html">About Our Team</a>
     <a href="contact.html">Contact Us</a>
-    <button class="mobile-toggle" data-mobile-toggle type="button">Menu <span>+</span></button>
+
+    <button class="mobile-toggle" data-mobile-toggle type="button">
+      Menu <span>+</span>
+    </button>
+
     <div class="mobile-submenu">
       <a href="menu.html">All Breads</a>
       <a href="sourdough.html">Sourdough</a>
       <a href="focaccia.html">Focaccia</a>
     </div>
+
     <a href="order.html" class="btn btn-primary btn-block">Order Now</a>
   </div>
 </nav>
@@ -63,178 +73,539 @@
 <main>
   <section class="section theme-light">
     <div class="container order-shell">
+
       <div class="text-center reveal">
         <h1 class="display">place your order</h1>
-        <p class="prose" style="margin-top:1rem;">Orders are taken Monday&ndash;Thursday for pickup or delivery the following weekend. See <a href="sourdough.html" style="text-decoration:underline;">sourdough</a> and <a href="focaccia.html" style="text-decoration:underline;">focaccia</a> for the full lineup, or the <a href="contact.html" style="text-decoration:underline;">contact page</a> for our delivery area.</p>
+
+        <p class="prose" style="margin-top:1rem;">
+          We accept orders at any time. Pickup and delivery are available on Saturdays and Sundays, with at least 72 hours&rsquo; notice so we have enough time to prepare everything fresh. Orders may be scheduled up to 21 days in advance. See <a href="sourdough.html" style="text-decoration:underline;">sourdough</a> and <a href="focaccia.html" style="text-decoration:underline;">focaccia</a> for the full lineup, or visit the <a href="contact.html" style="text-decoration:underline;">contact page</a> for our delivery area.
+        </p>
       </div>
 
       <div id="orderStatus" class="status-banner reveal" style="margin-top:2rem;"></div>
 
       <div id="orderFormWrap" class="reveal">
         <form id="orderForm" novalidate>
-          <!-- Spam trap, harmless honeypot field -->
-          <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
-          <input type="hidden" name="_subject" value="New order — Crumb &amp; Crust">
+
+          <input
+            type="text"
+            name="_gotcha"
+            style="display:none"
+            tabindex="-1"
+            autocomplete="off"
+          >
+
+          <input
+            type="hidden"
+            name="_subject"
+            value="New order — Crumb &amp; Crust"
+          >
 
           <div class="form-section">
             <h2 class="display" style="font-size:1.3rem;">your info</h2>
+
             <div class="form-grid">
               <div class="field">
                 <label for="fName">Name</label>
-                <input type="text" id="fName" name="Name" required autocomplete="name">
+                <input
+                  type="text"
+                  id="fName"
+                  name="Name"
+                  required
+                  autocomplete="name"
+                >
               </div>
+
               <div class="field">
                 <label for="fPhone">Phone</label>
-                <input type="tel" id="fPhone" name="Phone" required autocomplete="tel">
+                <input
+                  type="tel"
+                  id="fPhone"
+                  name="Phone"
+                  required
+                  autocomplete="tel"
+                >
               </div>
+
               <div class="field full">
                 <label for="fEmail">Email</label>
-                <input type="email" id="fEmail" name="Email" required autocomplete="email">
+                <input
+                  type="email"
+                  id="fEmail"
+                  name="Email"
+                  required
+                  autocomplete="email"
+                >
               </div>
             </div>
           </div>
 
           <div class="form-section">
             <h2 class="display" style="font-size:1.3rem;">pickup or delivery?</h2>
+
             <div class="radio-pills">
               <label class="radio-pill">
-                <input type="radio" name="Fulfillment" value="Pickup" checked> Pickup
+                <input
+                  type="radio"
+                  name="Fulfillment"
+                  value="Pickup"
+                  checked
+                >
+                Pickup
               </label>
+
               <label class="radio-pill">
-                <input type="radio" name="Fulfillment" value="Delivery"> Delivery <span class="hint">(+$4, within 9mi of La Costa)</span>
+                <input
+                  type="radio"
+                  name="Fulfillment"
+                  value="Delivery"
+                >
+                Delivery
+                <span class="hint">
+                  (+$4, within 9mi of La Costa)
+                </span>
               </label>
             </div>
 
             <div id="deliveryFields">
               <div class="field full">
                 <label for="fAddress">Delivery address</label>
-                <input type="text" id="fAddress" name="Delivery Address" autocomplete="street-address">
-                <span class="hint">Must be within a 9-mile radius of La Costa, Carlsbad. We&rsquo;ll confirm if you&rsquo;re outside the zone.</span>
+
+                <input
+                  type="text"
+                  id="fAddress"
+                  name="Delivery Address"
+                  autocomplete="street-address"
+                >
+
+                <span class="hint">
+                  Must be within a 9-mile radius of La Costa, Carlsbad. We&rsquo;ll confirm if you&rsquo;re outside the zone.
+                </span>
               </div>
             </div>
 
             <div class="field" style="margin-top:1.1rem;">
-              <label for="pickupDate">Preferred date</label>
-              <select id="pickupDate" name="Preferred Date" required></select>
-              <span class="hint">Pickup &amp; delivery happen Saturdays and Sundays.</span>
+              <label for="pickupDate">Preferred pickup or delivery date</label>
+
+              <select
+                id="pickupDate"
+                name="Preferred Date"
+                required
+              ></select>
+
+              <span class="hint">
+                Weekend dates only. Please order at least 72 hours ahead and no more than 21 days in advance.
+              </span>
             </div>
           </div>
 
           <div class="form-section">
             <div class="section-heading-row">
-              <h2 class="display" style="font-size:1.3rem;">what would you like?</h2>
-              <span id="itemCounter" class="item-counter">0 of 4 selected</span>
+              <h2 class="display" style="font-size:1.3rem;">
+                what would you like?
+              </h2>
+
+              <span id="itemCounter" class="item-counter">
+                0 of 4 selected
+              </span>
             </div>
-            <p class="prose" style="font-size:0.88rem; margin-bottom:1.25rem;">Orders are limited to 4 loaves/focaccias total, so everyone gets a fair shot at fresh bread.</p>
+
+            <p class="prose" style="font-size:0.88rem; margin-bottom:1.25rem;">
+              Orders are limited to 4 loaves/focaccias total, so everyone gets a fair shot at fresh bread.
+            </p>
+
             <div class="order-items">
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>OG Sourdough <span class="item-price">$10.00</span></h4>
+                  <h4>
+                    OG Sourdough
+                    <span class="item-price">$10.00</span>
+                  </h4>
+
                   <p>Naturally leavened, tangy crumb, crackled crust.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease OG Sourdough quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="OG Sourdough" data-price="10.00" value="0" min="0" max="4" readonly aria-label="OG Sourdough quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase OG Sourdough quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease OG Sourdough quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="OG Sourdough"
+                    data-price="10.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="OG Sourdough quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase OG Sourdough quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Rosemary Sourdough <span class="item-price">$12.00</span></h4>
+                  <h4>
+                    Rosemary Sourdough
+                    <span class="item-price">$12.00</span>
+                  </h4>
+
                   <p>Fresh rosemary folded into the classic base.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Rosemary Sourdough quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Rosemary Sourdough" data-price="12.00" value="0" min="0" max="4" readonly aria-label="Rosemary Sourdough quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Rosemary Sourdough quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Rosemary Sourdough quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="Rosemary Sourdough"
+                    data-price="12.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Rosemary Sourdough quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Rosemary Sourdough quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>OG Focaccia <span class="item-price">Small &middot; $6.00</span></h4>
+                  <h4>
+                    OG Focaccia
+                    <span class="item-price">
+                      Small &middot; $6.00
+                    </span>
+                  </h4>
+
                   <p>Olive oil, flaky sea salt, pillowy crumb.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small OG Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="OG Focaccia (Small)" data-price="6.00" value="0" min="0" max="4" readonly aria-label="Small OG Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small OG Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Small OG Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="OG Focaccia (Small)"
+                    data-price="6.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Small OG Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Small OG Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>OG Focaccia <span class="item-price">Large &middot; $12.00</span></h4>
+                  <h4>
+                    OG Focaccia
+                    <span class="item-price">
+                      Large &middot; $12.00
+                    </span>
+                  </h4>
+
                   <p>Olive oil, flaky sea salt, pillowy crumb.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large OG Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="OG Focaccia (Large)" data-price="12.00" value="0" min="0" max="4" readonly aria-label="Large OG Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large OG Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Large OG Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="OG Focaccia (Large)"
+                    data-price="12.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Large OG Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Large OG Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Rosemary Focaccia <span class="item-price">Small &middot; $7.50</span></h4>
+                  <h4>
+                    Rosemary Focaccia
+                    <span class="item-price">
+                      Small &middot; $7.50
+                    </span>
+                  </h4>
+
                   <p>Topped with fresh rosemary and flaky salt.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small Rosemary Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Rosemary Focaccia (Small)" data-price="7.50" value="0" min="0" max="4" readonly aria-label="Small Rosemary Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small Rosemary Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Small Rosemary Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="Rosemary Focaccia (Small)"
+                    data-price="7.50"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Small Rosemary Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Small Rosemary Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Rosemary Focaccia <span class="item-price">Large &middot; $14.00</span></h4>
+                  <h4>
+                    Rosemary Focaccia
+                    <span class="item-price">
+                      Large &middot; $14.00
+                    </span>
+                  </h4>
+
                   <p>Topped with fresh rosemary and flaky salt.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large Rosemary Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Rosemary Focaccia (Large)" data-price="14.00" value="0" min="0" max="4" readonly aria-label="Large Rosemary Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large Rosemary Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Large Rosemary Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="Rosemary Focaccia (Large)"
+                    data-price="14.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Large Rosemary Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Large Rosemary Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Margherita Focaccia <span class="item-price">Small &middot; $8.00</span></h4>
+                  <h4>
+                    Margherita Focaccia
+                    <span class="item-price">
+                      Small &middot; $8.00
+                    </span>
+                  </h4>
+
                   <p>Crushed tomato, mozzarella, fresh basil.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Small Margherita Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Margherita Focaccia (Small)" data-price="8.00" value="0" min="0" max="4" readonly aria-label="Small Margherita Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Small Margherita Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Small Margherita Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="Margherita Focaccia (Small)"
+                    data-price="8.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Small Margherita Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Small Margherita Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
               <div class="order-item">
                 <div class="order-item-info">
-                  <h4>Margherita Focaccia <span class="item-price">Large &middot; $15.00</span></h4>
+                  <h4>
+                    Margherita Focaccia
+                    <span class="item-price">
+                      Large &middot; $15.00
+                    </span>
+                  </h4>
+
                   <p>Crushed tomato, mozzarella, fresh basil.</p>
                 </div>
+
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn qty-minus" aria-label="Decrease Large Margherita Focaccia quantity">&minus;</button>
-                  <input type="number" class="qty-input" name="Margherita Focaccia (Large)" data-price="15.00" value="0" min="0" max="4" readonly aria-label="Large Margherita Focaccia quantity">
-                  <button type="button" class="qty-btn qty-plus" aria-label="Increase Large Margherita Focaccia quantity">+</button>
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus"
+                    aria-label="Decrease Large Margherita Focaccia quantity"
+                  >
+                    &minus;
+                  </button>
+
+                  <input
+                    type="number"
+                    class="qty-input"
+                    name="Margherita Focaccia (Large)"
+                    data-price="15.00"
+                    value="0"
+                    min="0"
+                    max="4"
+                    readonly
+                    aria-label="Large Margherita Focaccia quantity"
+                  >
+
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus"
+                    aria-label="Increase Large Margherita Focaccia quantity"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+
             </div>
-            <div id="orderTotal" class="order-total">Estimated total: $0.00</div>
+
+            <div id="orderTotal" class="order-total">
+              Estimated total: $0.00
+            </div>
           </div>
 
           <div class="form-section">
             <div class="field full">
-              <label for="fNotes">Anything else we should know? <span class="hint">(optional)</span></label>
-              <textarea id="fNotes" name="Notes" placeholder="Allergies, gate codes, timing requests, etc."></textarea>
+              <label for="fNotes">
+                Anything else we should know?
+                <span class="hint">(optional)</span>
+              </label>
+
+              <textarea
+                id="fNotes"
+                name="Notes"
+                placeholder="Allergies, gate codes, timing requests, etc."
+              ></textarea>
             </div>
           </div>
 
-          <button type="submit" id="submitOrder" class="btn btn-primary btn-block">Send order</button>
-          <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
+          <button
+            type="submit"
+            id="submitOrder"
+            class="btn btn-primary btn-block"
+          >
+            Send order
+          </button>
 
-          <p class="prose" style="margin-top:1.5rem; font-size:0.9rem; text-align:center;">Prefer email? You can always send your order straight to <a href="mailto:crumbandcrustca@gmail.com" style="text-decoration:underline;">crumbandcrustca@gmail.com</a>.</p>
+          <div
+            id="formMessage"
+            class="form-message"
+            role="status"
+            aria-live="polite"
+          ></div>
+
+          <p class="prose" style="margin-top:1.5rem; font-size:0.9rem; text-align:center;">
+            Prefer email? You can always send your order straight to
+            <a href="mailto:crumbandcrustca@gmail.com" style="text-decoration:underline;">
+              crumbandcrustca@gmail.com
+            </a>.
+          </p>
         </form>
 
-        <!-- Optional: uncomment to show yourself a visible reminder banner until Formspree is connected.
+        <!--
         <div class="setup-note">
-          <strong>Heads up:</strong> this form isn&rsquo;t connected to an inbox yet &mdash; see README.md for the 2-minute Formspree setup.
+          <strong>Heads up:</strong>
+          this form isn&rsquo;t connected to an inbox yet &mdash;
+          see README.md for the 2-minute Formspree setup.
         </div>
         -->
       </div>
@@ -245,7 +616,13 @@
 <footer class="site-footer crumb-field">
   <div class="container">
     <span class="logo">crumb &amp; crust</span>
-    <p>Home-baked in Carlsbad, CA &middot; <a href="mailto:crumbandcrustca@gmail.com">crumbandcrustca@gmail.com</a></p>
+
+    <p>
+      Home-baked in Carlsbad, CA &middot;
+      <a href="mailto:crumbandcrustca@gmail.com">
+        crumbandcrustca@gmail.com
+      </a>
+    </p>
   </div>
 </footer>
 
