@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Admin Login | Crumb &amp; Crust</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #33261f;
+      background:
+        linear-gradient(
+          rgba(255, 250, 243, 0.92),
+          rgba(255, 250, 243, 0.92)
+        ),
+        #f4eadc;
+    }
+
+    .login-card {
+      width: min(100%, 430px);
+      padding: 40px;
+      border: 1px solid #dfd0bd;
+      border-radius: 20px;
+      background: #fffdf9;
+      box-shadow: 0 18px 50px rgba(72, 48, 32, 0.14);
+    }
+
+    .brand {
+      margin: 0 0 8px;
+      color: #9b5d33;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    .description {
+      margin: 0 0 28px;
+      color: #73645a;
+      line-height: 1.5;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #cdbba8;
+      border-radius: 10px;
+      background: white;
+      color: #33261f;
+      font: inherit;
+    }
+
+    input:focus {
+      outline: 3px solid rgba(155, 93, 51, 0.18);
+      border-color: #9b5d33;
+    }
+
+    button {
+      min-height: 48px;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 10px;
+      background: #9b5d33;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #7f4827;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .message {
+      display: none;
+      margin: 18px 0 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      line-height: 1.4;
+    }
+
+    .message.visible {
+      display: block;
+    }
+
+    .message.error {
+      color: #841b1b;
+      background: #fde8e8;
+      border: 1px solid #f1b8b8;
+    }
+
+    .message.success {
+      color: #195d32;
+      background: #e5f5ea;
+      border: 1px solid #b7dfc4;
+    }
+
+    .home-link {
+      display: block;
+      margin-top: 24px;
+      color: #73523d;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .login-card {
+        padding: 28px 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="login-card">
+    <p class="brand">Crumb &amp; Crust</p>
+    <h1>Admin login</h1>
+
+    <p class="description">
+      Sign in with an approved administrator account.
+    </p>
+
+    <form id="loginForm" class="login-form">
+      <label>
+        Email address
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+        >
+      </label>
+
+      <label>
+        Password
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+      </label>
+
+      <button id="loginButton" type="submit">
+        Sign in
+      </button>
+    </form>
+
+    <div
+      id="loginMessage"
+      class="message"
+      role="alert"
+      aria-live="polite"
+    ></div>
+
+    <a class="home-link" href="/">
+      Return to the website
+    </a>
+  </main>
+
+  <script type="module">
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDrqltlq7LiRPH84y1-2lH0ISPsEhEQjak",
+      authDomain: "crumb-and-crust.firebaseapp.com",
+      projectId: "crumb-and-crust",
+      storageBucket: "crumb-and-crust.firebasestorage.app",
+      messagingSenderId: "514675143126",
+      appId: "1:514675143126:web:3f47f98c476b4b0f96f477"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const loginMessage = document.getElementById("loginMessage");
+
+    function showMessage(message, type) {
+      loginMessage.textContent = message;
+      loginMessage.className = `message visible ${type}`;
+    }
+
+    function getFriendlyError(errorCode) {
+      switch (errorCode) {
+        case "auth/invalid-credential":
+        case "auth/invalid-login-credentials":
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+          return "The email or password is incorrect.";
+
+        case "auth/invalid-email":
+          return "Enter a valid email address.";
+
+        case "auth/too-many-requests":
+          return "Too many failed attempts. Wait a few minutes and try again.";
+
+        case "auth/network-request-failed":
+          return "A network error occurred. Check your connection and try again.";
+
+        default:
+          return "Sign-in failed. Check your details and try again.";
+      }
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        window.location.replace("/admin/");
+      }
+    });
+
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Signing in…";
+      loginMessage.className = "message";
+
+      try {
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        showMessage(
+          "Signed in successfully. Opening dashboard…",
+          "success"
+        );
+
+        window.location.replace("/admin/");
+      } catch (error) {
+        console.error("Admin sign-in failed:", error);
+        showMessage(
+          getFriendlyError(error.code),
+          "error"
+        );
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Sign in";
+      }
+    });
+  </script>
+</body>
+</html>
