@@ -1,3 +1,17 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDrqltlq7LiRPH84y1-2lH0ISPsEhEQjak",
+  authDomain: "crumb-and-crust.firebaseapp.com",
+  projectId: "crumb-and-crust",
+  storageBucket: "crumb-and-crust.firebasestorage.app",
+  messagingSenderId: "514675143126",
+  appId: "1:514675143126:web:3f47f98c476b4b0f96f477"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
