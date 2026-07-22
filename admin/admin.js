@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+
 import {
   addDoc,
   collection,
@@ -12,7 +13,12 @@ import {
   setDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDrqltlq7LiRPH84y1-2lH0ISPsEhEQjak",
@@ -27,16 +33,20 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);
 
+document.documentElement.style.visibility = "hidden";
+
 const state = {
   activePage: "dashboard",
   orders: [],
   products: [],
   coupons: [],
+
   vacation: {
     enabled: false,
     message: "We are temporarily closed for orders.",
     reopenDate: ""
   },
+
   settings: {
     bakeryName: "Crumb & Crust",
     email: "",
@@ -44,1016 +54,1242 @@ const state = {
   }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const app = document.getElementById("app");
-
-  if (!app) {
-    console.error('Could not find an element with id="app".');
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    window.location.replace("/admin/login.html");
     return;
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+  document.documentElement.style.visibility = "visible";
+  startAdminDashboard();
+});
 
-  function formatMoney(value) {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD"
-    }).format(Number(value) || 0);
-  }
+function startAdminDashboard() {
+  const initialize = () => {
+    const app = document.getElementById("app");
 
-  function formatDate(value) {
-    if (!value) return "Not set";
-
-    const date =
-      typeof value?.toDate === "function"
-        ? value.toDate()
-        : new Date(value);
-
-    if (Number.isNaN(date.getTime())) return "Not set";
-
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }).format(date);
-  }
-
-  function showToast(message, type = "success") {
-    document.querySelector(".admin-toast")?.remove();
-
-    const toast = document.createElement("div");
-    toast.className = `admin-toast admin-toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => toast.classList.add("visible"), 10);
-
-    setTimeout(() => {
-      toast.classList.remove("visible");
-      setTimeout(() => toast.remove(), 250);
-    }, 2500);
-  }
-
-  function reportError(message, error) {
-    console.error(message, error);
-    showToast(message, "error");
-  }
-
-  function getPageTitle() {
-    const titles = {
-      dashboard: "Dashboard",
-      orders: "Orders",
-      vacation: "Vacation Mode",
-      products: "Products",
-      coupons: "Coupons",
-      analytics: "Analytics",
-      settings: "Settings"
-    };
-
-    return titles[state.activePage] || "Dashboard";
-  }
-
-  function createNavButton(page, label) {
-    return `
-      <button
-        class="nav-button ${state.activePage === page ? "active" : ""}"
-        data-page="${page}"
-        type="button"
-      >
-        ${label}
-      </button>
-    `;
-  }
-
-  function createEmptyState(title, message) {
-    return `
-      <div class="empty-state">
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(message)}</p>
-      </div>
-    `;
-  }
-
-  function renderApp() {
-    app.innerHTML = `
-      <div class="admin-layout">
-        <aside class="sidebar">
-          <div class="sidebar-brand">
-            <span class="brand-mark">C&amp;C</span>
-            <div>
-              <h2>${escapeHtml(state.settings.bakeryName)}</h2>
-              <p>Admin Panel</p>
-            </div>
-          </div>
-
-          <nav class="sidebar-nav">
-            ${createNavButton("dashboard", "Dashboard")}
-            ${createNavButton("orders", "Orders")}
-            ${createNavButton("vacation", "Vacation Mode")}
-            ${createNavButton("products", "Products")}
-            ${createNavButton("coupons", "Coupons")}
-            ${createNavButton("analytics", "Analytics")}
-            ${createNavButton("settings", "Settings")}
-          </nav>
-
-          <div class="sidebar-footer">
-            <span class="status-dot"></span>
-            <span>Connected to Firebase</span>
-          </div>
-        </aside>
-
-        <main class="main-content">
-          <header class="topbar">
-            <div>
-              <p class="eyebrow">Crumb &amp; Crust</p>
-              <h1>${getPageTitle()}</h1>
-            </div>
-
-            <button class="mobile-menu-button" id="mobileMenuButton" type="button">
-              Menu
-            </button>
-          </header>
-
-          <section id="pageContent" class="page-content"></section>
-        </main>
-      </div>
-    `;
-
-    document.querySelectorAll("[data-page]").forEach(button => {
-      button.addEventListener("click", () => {
-        state.activePage = button.dataset.page;
-        renderApp();
-      });
-    });
-
-    document
-      .getElementById("mobileMenuButton")
-      ?.addEventListener("click", () => {
-        document.querySelector(".sidebar")?.classList.toggle("open");
-      });
-
-    renderPage();
-  }
-
-  function renderPage() {
-    const container = document.getElementById("pageContent");
-    if (!container) return;
-
-    switch (state.activePage) {
-      case "orders":
-        renderOrders(container);
-        break;
-      case "vacation":
-        renderVacation(container);
-        break;
-      case "products":
-        renderProducts(container);
-        break;
-      case "coupons":
-        renderCoupons(container);
-        break;
-      case "analytics":
-        renderAnalytics(container);
-        break;
-      case "settings":
-        renderSettings(container);
-        break;
-      default:
-        renderDashboard(container);
+    if (!app) {
+      console.error('Could not find an element with id="app".');
+      return;
     }
-  }
 
-  function renderDashboard(container) {
-    const openOrders = state.orders.filter(
-      order =>
-        order.status !== "Completed" &&
-        order.status !== "Cancelled"
-    );
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-    const availableProducts = state.products.filter(
-      product => product.available
-    );
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+      }).format(Number(value) || 0);
+    }
 
-    const activeCoupons = state.coupons.filter(
-      coupon => coupon.active
-    );
+    function showToast(message, type = "success") {
+      document.querySelector(".admin-toast")?.remove();
 
-    container.innerHTML = `
-      <div class="welcome-panel">
-        <div>
-          <p class="eyebrow">Overview</p>
-          <h2>Welcome back.</h2>
-          <p>Your dashboard is connected to Cloud Firestore.</p>
-        </div>
+      const toast = document.createElement("div");
+      toast.className = `admin-toast admin-toast-${type}`;
+      toast.textContent = message;
 
-        <button class="primary-button" id="viewOrdersButton" type="button">
-          View orders
+      document.body.appendChild(toast);
+
+      window.setTimeout(() => {
+        toast.classList.add("visible");
+      }, 10);
+
+      window.setTimeout(() => {
+        toast.classList.remove("visible");
+
+        window.setTimeout(() => {
+          toast.remove();
+        }, 250);
+      }, 2500);
+    }
+
+    function reportError(message, error) {
+      console.error(message, error);
+      showToast(message, "error");
+    }
+
+    function getPageTitle() {
+      const titles = {
+        dashboard: "Dashboard",
+        orders: "Orders",
+        vacation: "Vacation Mode",
+        products: "Products",
+        coupons: "Coupons",
+        analytics: "Analytics",
+        settings: "Settings"
+      };
+
+      return titles[state.activePage] || "Dashboard";
+    }
+
+    function createNavButton(page, label) {
+      return `
+        <button
+          class="nav-button ${state.activePage === page ? "active" : ""}"
+          data-page="${page}"
+          type="button"
+        >
+          ${label}
         </button>
-      </div>
+      `;
+    }
 
-      <div class="dashboard-cards">
-        <article class="dashboard-card">
-          <p class="card-label">Open orders</p>
-          <strong>${openOrders.length}</strong>
-          <span>${state.orders.length} total orders</span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Vacation mode</p>
-          <strong>${state.vacation.enabled ? "On" : "Off"}</strong>
-          <span>
-            ${state.vacation.enabled ? "Ordering is paused" : "Ordering is open"}
-          </span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Available products</p>
-          <strong>${availableProducts.length}</strong>
-          <span>${state.products.length} total products</span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Active coupons</p>
-          <strong>${activeCoupons.length}</strong>
-          <span>${state.coupons.length} total coupons</span>
-        </article>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Store status</p>
-            <h2>
-              ${state.vacation.enabled ? "Orders paused" : "Orders open"}
-            </h2>
-          </div>
+    function createEmptyState(title, message) {
+      return `
+        <div class="empty-state">
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(message)}</p>
         </div>
+      `;
+    }
 
-        <p>
-          ${
-            state.vacation.enabled
-              ? escapeHtml(state.vacation.message)
-              : "Customers can currently place orders."
-          }
-        </p>
-      </div>
-    `;
+    function renderApp() {
+      app.innerHTML = `
+        <div class="admin-layout">
+          <aside class="sidebar">
+            <div class="sidebar-brand">
+              <span class="brand-mark">C&amp;C</span>
 
-    document
-      .getElementById("viewOrdersButton")
-      ?.addEventListener("click", () => {
-        state.activePage = "orders";
-        renderApp();
-      });
-  }
-
-  function renderOrders(container) {
-    container.innerHTML = `
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Order management</p>
-            <h2>Customer orders</h2>
-          </div>
-
-          <button class="primary-button" id="addOrderButton" type="button">
-            Add order
-          </button>
-        </div>
-
-        <div id="orderFormArea"></div>
-
-        ${
-          state.orders.length
-            ? `
-              <div class="table-wrapper">
-                <table class="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Order</th>
-                      <th>Customer</th>
-                      <th>Item</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    ${state.orders.map(order => `
-                      <tr>
-                        <td>${escapeHtml(order.orderNumber || order.id)}</td>
-                        <td>${escapeHtml(order.customer || order.customerName)}</td>
-                        <td>${escapeHtml(order.item || order.itemsSummary || "")}</td>
-                        <td>${formatMoney(order.total)}</td>
-
-                        <td>
-                          <select data-order-status="${escapeHtml(order.id)}">
-                            ${["New", "Preparing", "Ready", "Completed", "Cancelled"]
-                              .map(status => `
-                                <option
-                                  value="${status}"
-                                  ${order.status === status ? "selected" : ""}
-                                >
-                                  ${status}
-                                </option>
-                              `)
-                              .join("")}
-                          </select>
-                        </td>
-
-                        <td>
-                          <button
-                            class="danger-button small-button"
-                            data-delete-order="${escapeHtml(order.id)}"
-                            type="button"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    `).join("")}
-                  </tbody>
-                </table>
+              <div>
+                <h2>${escapeHtml(state.settings.bakeryName)}</h2>
+                <p>Admin Panel</p>
               </div>
-            `
-            : createEmptyState(
-                "No orders yet",
-                "Orders stored in Firestore will appear here."
-              )
-        }
-      </div>
-    `;
+            </div>
 
-    document
-      .getElementById("addOrderButton")
-      ?.addEventListener("click", renderOrderForm);
+            <nav class="sidebar-nav" aria-label="Admin navigation">
+              ${createNavButton("dashboard", "Dashboard")}
+              ${createNavButton("orders", "Orders")}
+              ${createNavButton("vacation", "Vacation Mode")}
+              ${createNavButton("products", "Products")}
+              ${createNavButton("coupons", "Coupons")}
+              ${createNavButton("analytics", "Analytics")}
+              ${createNavButton("settings", "Settings")}
+            </nav>
 
-    document.querySelectorAll("[data-order-status]").forEach(select => {
-      select.addEventListener("change", async () => {
-        try {
-          await updateDoc(doc(db, "orders", select.dataset.orderStatus), {
-            status: select.value,
-            updatedAt: serverTimestamp()
-          });
+            <div class="sidebar-footer">
+              <div>
+                <span class="status-dot"></span>
+                <span>Connected to Firebase</span>
+              </div>
 
-          showToast("Order status updated.");
-        } catch (error) {
-          reportError("Could not update the order.", error);
-        }
-      });
-    });
+              <button
+                class="secondary-button small-button"
+                id="logoutButton"
+                type="button"
+              >
+                Sign out
+              </button>
+            </div>
+          </aside>
 
-    document.querySelectorAll("[data-delete-order]").forEach(button => {
-      button.addEventListener("click", async () => {
-        if (!confirm("Delete this order?")) return;
+          <main class="main-content">
+            <header class="topbar">
+              <div>
+                <p class="eyebrow">Crumb &amp; Crust</p>
+                <h1>${getPageTitle()}</h1>
+              </div>
 
-        try {
-          await deleteDoc(doc(db, "orders", button.dataset.deleteOrder));
-          showToast("Order deleted.");
-        } catch (error) {
-          reportError("Could not delete the order.", error);
-        }
-      });
-    });
-  }
+              <button
+                class="mobile-menu-button"
+                id="mobileMenuButton"
+                type="button"
+              >
+                Menu
+              </button>
+            </header>
 
-  function renderOrderForm() {
-    const formArea = document.getElementById("orderFormArea");
-    if (!formArea) return;
-
-    formArea.innerHTML = `
-      <form class="admin-form inline-form" id="orderForm">
-        <label>
-          Customer name
-          <input name="customer" required maxlength="80">
-        </label>
-
-        <label>
-          Item
-          <input name="item" required maxlength="100">
-        </label>
-
-        <label>
-          Total
-          <input name="total" type="number" required min="0" step="0.01">
-        </label>
-
-        <div class="form-actions">
-          <button class="primary-button" type="submit">Save order</button>
-          <button class="secondary-button" id="cancelOrderButton" type="button">
-            Cancel
-          </button>
+            <section id="pageContent" class="page-content"></section>
+          </main>
         </div>
-      </form>
-    `;
+      `;
 
-    document
-      .getElementById("cancelOrderButton")
-      ?.addEventListener("click", () => {
-        formArea.innerHTML = "";
+      document.querySelectorAll("[data-page]").forEach(button => {
+        button.addEventListener("click", () => {
+          state.activePage = button.dataset.page;
+          renderApp();
+        });
       });
 
-    document
-      .getElementById("orderForm")
-      ?.addEventListener("submit", async event => {
-        event.preventDefault();
+      document
+        .getElementById("mobileMenuButton")
+        ?.addEventListener("click", () => {
+          document.querySelector(".sidebar")?.classList.toggle("open");
+        });
 
-        const formData = new FormData(event.currentTarget);
+      document
+        .getElementById("logoutButton")
+        ?.addEventListener("click", async () => {
+          try {
+            await signOut(auth);
+            window.location.replace("/admin/login.html");
+          } catch (error) {
+            reportError("Could not sign out.", error);
+          }
+        });
 
-        try {
-          await addDoc(collection(db, "orders"), {
-            orderNumber: `CC-${Date.now().toString().slice(-6)}`,
-            customer: String(formData.get("customer")).trim(),
-            item: String(formData.get("item")).trim(),
-            total: Number(formData.get("total")),
-            status: "New",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
+      renderPage();
+    }
 
-          showToast("Order added.");
-          formArea.innerHTML = "";
-        } catch (error) {
-          reportError("Could not add the order.", error);
-        }
+    function renderPage() {
+      const container = document.getElementById("pageContent");
+
+      if (!container) {
+        return;
+      }
+
+      switch (state.activePage) {
+        case "orders":
+          renderOrders(container);
+          break;
+
+        case "vacation":
+          renderVacation(container);
+          break;
+
+        case "products":
+          renderProducts(container);
+          break;
+
+        case "coupons":
+          renderCoupons(container);
+          break;
+
+        case "analytics":
+          renderAnalytics(container);
+          break;
+
+        case "settings":
+          renderSettings(container);
+          break;
+
+        default:
+          renderDashboard(container);
+      }
+    }
+
+    function renderDashboard(container) {
+      const openOrders = state.orders.filter(order => {
+        return (
+          order.status !== "Completed" &&
+          order.status !== "Cancelled"
+        );
       });
-  }
 
-  function renderVacation(container) {
-    container.innerHTML = `
-      <div class="panel narrow-panel">
-        <div class="panel-header">
+      const availableProducts = state.products.filter(product => {
+        return product.available;
+      });
+
+      const activeCoupons = state.coupons.filter(coupon => {
+        return coupon.active;
+      });
+
+      container.innerHTML = `
+        <div class="welcome-panel">
           <div>
-            <p class="eyebrow">Store availability</p>
-            <h2>Vacation mode</h2>
+            <p class="eyebrow">Overview</p>
+            <h2>Welcome back.</h2>
+            <p>Your dashboard is connected to Cloud Firestore.</p>
           </div>
 
-          <span class="status-badge ${
-            state.vacation.enabled
-              ? "status-cancelled"
-              : "status-completed"
-          }">
-            ${state.vacation.enabled ? "Enabled" : "Disabled"}
-          </span>
+          <button
+            class="primary-button"
+            id="viewOrdersButton"
+            type="button"
+          >
+            View orders
+          </button>
         </div>
 
-        <form class="admin-form" id="vacationForm">
-          <label class="toggle-row">
+        <div class="dashboard-cards">
+          <article class="dashboard-card">
+            <p class="card-label">Open orders</p>
+            <strong>${openOrders.length}</strong>
+            <span>${state.orders.length} total orders</span>
+          </article>
+
+          <article class="dashboard-card">
+            <p class="card-label">Vacation mode</p>
+            <strong>${state.vacation.enabled ? "On" : "Off"}</strong>
+
             <span>
-              <strong>Pause customer orders</strong>
-              <small>Customers will see your closure message.</small>
+              ${
+                state.vacation.enabled
+                  ? "Ordering is paused"
+                  : "Ordering is open"
+              }
             </span>
+          </article>
 
-            <input
-              name="enabled"
-              type="checkbox"
-              ${state.vacation.enabled ? "checked" : ""}
-            >
-          </label>
+          <article class="dashboard-card">
+            <p class="card-label">Available products</p>
+            <strong>${availableProducts.length}</strong>
+            <span>${state.products.length} total products</span>
+          </article>
 
-          <label>
-            Closure message
-            <textarea name="message" rows="4" maxlength="250" required>${escapeHtml(
-              state.vacation.message
-            )}</textarea>
-          </label>
-
-          <label>
-            Reopening date
-            <input
-              name="reopenDate"
-              type="date"
-              value="${escapeHtml(state.vacation.reopenDate)}"
-            >
-          </label>
-
-          <button class="primary-button" type="submit">
-            Save vacation settings
-          </button>
-        </form>
-      </div>
-    `;
-
-    document
-      .getElementById("vacationForm")
-      ?.addEventListener("submit", async event => {
-        event.preventDefault();
-
-        const formData = new FormData(event.currentTarget);
-
-        try {
-          await setDoc(
-            doc(db, "settings", "store"),
-            {
-              vacation: {
-                enabled: formData.get("enabled") === "on",
-                message: String(formData.get("message")).trim(),
-                reopenDate: String(formData.get("reopenDate") || "")
-              },
-              updatedAt: serverTimestamp()
-            },
-            { merge: true }
-          );
-
-          showToast("Vacation settings saved.");
-        } catch (error) {
-          reportError("Could not save Vacation Mode.", error);
-        }
-      });
-  }
-
-  function renderProducts(container) {
-    container.innerHTML = `
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Menu management</p>
-            <h2>Products</h2>
-          </div>
-
-          <button class="primary-button" id="addProductButton" type="button">
-            Add product
-          </button>
+          <article class="dashboard-card">
+            <p class="card-label">Active coupons</p>
+            <strong>${activeCoupons.length}</strong>
+            <span>${state.coupons.length} total coupons</span>
+          </article>
         </div>
 
-        <div id="productFormArea"></div>
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Store status</p>
 
-        <div class="product-grid">
+              <h2>
+                ${
+                  state.vacation.enabled
+                    ? "Orders paused"
+                    : "Orders open"
+                }
+              </h2>
+            </div>
+          </div>
+
+          <p>
+            ${
+              state.vacation.enabled
+                ? escapeHtml(state.vacation.message)
+                : "Customers can currently place orders."
+            }
+          </p>
+        </div>
+      `;
+
+      document
+        .getElementById("viewOrdersButton")
+        ?.addEventListener("click", () => {
+          state.activePage = "orders";
+          renderApp();
+        });
+    }
+
+    function renderOrders(container) {
+      container.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Order management</p>
+              <h2>Customer orders</h2>
+            </div>
+
+            <button
+              class="primary-button"
+              id="addOrderButton"
+              type="button"
+            >
+              Add order
+            </button>
+          </div>
+
+          <div id="orderFormArea"></div>
+
           ${
-            state.products.length
-              ? state.products.map(product => `
-                  <article class="product-card">
-                    <div>
-                      <span class="status-badge ${
-                        product.available
-                          ? "status-completed"
-                          : "status-cancelled"
-                      }">
-                        ${product.available ? "Available" : "Unavailable"}
-                      </span>
+            state.orders.length
+              ? `
+                <div class="table-wrapper">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Item</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
 
-                      <h3>${escapeHtml(product.name)}</h3>
-                      <strong>${formatMoney(product.price)}</strong>
-                    </div>
+                    <tbody>
+                      ${state.orders
+                        .map(
+                          order => `
+                            <tr>
+                              <td>
+                                ${escapeHtml(
+                                  order.orderNumber || order.id
+                                )}
+                              </td>
 
-                    <div class="card-actions">
-                      <button
-                        class="secondary-button small-button"
-                        data-toggle-product="${escapeHtml(product.id)}"
-                        type="button"
-                      >
-                        ${
-                          product.available
-                            ? "Mark unavailable"
-                            : "Mark available"
-                        }
-                      </button>
+                              <td>
+                                ${escapeHtml(
+                                  order.customer ||
+                                    order.customerName ||
+                                    ""
+                                )}
+                              </td>
 
-                      <button
-                        class="danger-button small-button"
-                        data-delete-product="${escapeHtml(product.id)}"
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                `).join("")
+                              <td>
+                                ${escapeHtml(
+                                  order.item ||
+                                    order.itemsSummary ||
+                                    ""
+                                )}
+                              </td>
+
+                              <td>${formatMoney(order.total)}</td>
+
+                              <td>
+                                <select
+                                  data-order-status="${escapeHtml(order.id)}"
+                                >
+                                  ${[
+                                    "New",
+                                    "Preparing",
+                                    "Ready",
+                                    "Completed",
+                                    "Cancelled"
+                                  ]
+                                    .map(
+                                      status => `
+                                        <option
+                                          value="${status}"
+                                          ${
+                                            order.status === status
+                                              ? "selected"
+                                              : ""
+                                          }
+                                        >
+                                          ${status}
+                                        </option>
+                                      `
+                                    )
+                                    .join("")}
+                                </select>
+                              </td>
+
+                              <td>
+                                <button
+                                  class="danger-button small-button"
+                                  data-delete-order="${escapeHtml(order.id)}"
+                                  type="button"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          `
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                </div>
+              `
               : createEmptyState(
-                  "No products yet",
-                  "Add your first bakery product."
+                  "No orders yet",
+                  "Orders stored in Firestore will appear here."
                 )
           }
         </div>
-      </div>
-    `;
+      `;
 
-    document
-      .getElementById("addProductButton")
-      ?.addEventListener("click", renderProductForm);
+      document
+        .getElementById("addOrderButton")
+        ?.addEventListener("click", renderOrderForm);
 
-    document.querySelectorAll("[data-toggle-product]").forEach(button => {
-      button.addEventListener("click", async () => {
-        const product = state.products.find(
-          item => item.id === button.dataset.toggleProduct
-        );
+      document.querySelectorAll("[data-order-status]").forEach(select => {
+        select.addEventListener("change", async () => {
+          try {
+            await updateDoc(
+              doc(db, "orders", select.dataset.orderStatus),
+              {
+                status: select.value,
+                updatedAt: serverTimestamp()
+              }
+            );
 
-        if (!product) return;
-
-        try {
-          await updateDoc(doc(db, "products", product.id), {
-            available: !product.available,
-            updatedAt: serverTimestamp()
-          });
-
-          showToast("Product availability updated.");
-        } catch (error) {
-          reportError("Could not update the product.", error);
-        }
-      });
-    });
-
-    document.querySelectorAll("[data-delete-product]").forEach(button => {
-      button.addEventListener("click", async () => {
-        if (!confirm("Delete this product?")) return;
-
-        try {
-          await deleteDoc(
-            doc(db, "products", button.dataset.deleteProduct)
-          );
-
-          showToast("Product deleted.");
-        } catch (error) {
-          reportError("Could not delete the product.", error);
-        }
-      });
-    });
-  }
-
-  function renderProductForm() {
-    const formArea = document.getElementById("productFormArea");
-    if (!formArea) return;
-
-    formArea.innerHTML = `
-      <form class="admin-form inline-form" id="productForm">
-        <label>
-          Product name
-          <input name="name" required maxlength="100">
-        </label>
-
-        <label>
-          Price
-          <input name="price" type="number" required min="0" step="0.01">
-        </label>
-
-        <div class="form-actions">
-          <button class="primary-button" type="submit">Save product</button>
-          <button class="secondary-button" id="cancelProductButton" type="button">
-            Cancel
-          </button>
-        </div>
-      </form>
-    `;
-
-    document
-      .getElementById("cancelProductButton")
-      ?.addEventListener("click", () => {
-        formArea.innerHTML = "";
-      });
-
-    document
-      .getElementById("productForm")
-      ?.addEventListener("submit", async event => {
-        event.preventDefault();
-
-        const formData = new FormData(event.currentTarget);
-
-        try {
-          await addDoc(collection(db, "products"), {
-            name: String(formData.get("name")).trim(),
-            price: Number(formData.get("price")),
-            available: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-
-          showToast("Product added.");
-          formArea.innerHTML = "";
-        } catch (error) {
-          reportError("Could not add the product.", error);
-        }
-      });
-  }
-
-  function renderCoupons(container) {
-    container.innerHTML = `
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Promotions</p>
-            <h2>Coupons</h2>
-          </div>
-        </div>
-
-        <form class="admin-form inline-form" id="couponForm">
-          <label>
-            Coupon code
-            <input name="code" required maxlength="25">
-          </label>
-
-          <label>
-            Discount percentage
-            <input name="discount" type="number" required min="1" max="100">
-          </label>
-
-          <button class="primary-button" type="submit">Add coupon</button>
-        </form>
-
-        <div class="coupon-list">
-          ${
-            state.coupons.length
-              ? state.coupons.map(coupon => `
-                  <article class="coupon-card">
-                    <div>
-                      <span class="status-badge ${
-                        coupon.active
-                          ? "status-completed"
-                          : "status-cancelled"
-                      }">
-                        ${coupon.active ? "Active" : "Inactive"}
-                      </span>
-
-                      <h3>${escapeHtml(coupon.code)}</h3>
-                      <p>${Number(coupon.discount) || 0}% off</p>
-                    </div>
-
-                    <div class="card-actions">
-                      <button
-                        class="secondary-button small-button"
-                        data-toggle-coupon="${escapeHtml(coupon.id)}"
-                        type="button"
-                      >
-                        ${coupon.active ? "Deactivate" : "Activate"}
-                      </button>
-
-                      <button
-                        class="danger-button small-button"
-                        data-delete-coupon="${escapeHtml(coupon.id)}"
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                `).join("")
-              : createEmptyState(
-                  "No coupons yet",
-                  "Create your first discount code."
-                )
+            showToast("Order status updated.");
+          } catch (error) {
+            reportError("Could not update the order.", error);
           }
-        </div>
-      </div>
-    `;
-
-    document
-      .getElementById("couponForm")
-      ?.addEventListener("submit", async event => {
-        event.preventDefault();
-
-        const formData = new FormData(event.currentTarget);
-
-        try {
-          await addDoc(collection(db, "coupons"), {
-            code: String(formData.get("code")).trim().toUpperCase(),
-            discount: Number(formData.get("discount")),
-            active: true,
-            createdAt: serverTimestamp()
-          });
-
-          event.currentTarget.reset();
-          showToast("Coupon added.");
-        } catch (error) {
-          reportError("Could not add the coupon.", error);
-        }
+        });
       });
 
-    document.querySelectorAll("[data-toggle-coupon]").forEach(button => {
-      button.addEventListener("click", async () => {
-        const coupon = state.coupons.find(
-          item => item.id === button.dataset.toggleCoupon
-        );
+      document.querySelectorAll("[data-delete-order]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!window.confirm("Delete this order?")) {
+            return;
+          }
 
-        if (!coupon) return;
+          try {
+            await deleteDoc(
+              doc(db, "orders", button.dataset.deleteOrder)
+            );
 
-        try {
-          await updateDoc(doc(db, "coupons", coupon.id), {
-            active: !coupon.active
-          });
-
-          showToast("Coupon updated.");
-        } catch (error) {
-          reportError("Could not update the coupon.", error);
-        }
+            showToast("Order deleted.");
+          } catch (error) {
+            reportError("Could not delete the order.", error);
+          }
+        });
       });
-    });
+    }
 
-    document.querySelectorAll("[data-delete-coupon]").forEach(button => {
-      button.addEventListener("click", async () => {
-        try {
-          await deleteDoc(
-            doc(db, "coupons", button.dataset.deleteCoupon)
-          );
+    function renderOrderForm() {
+      const formArea = document.getElementById("orderFormArea");
 
-          showToast("Coupon deleted.");
-        } catch (error) {
-          reportError("Could not delete the coupon.", error);
-        }
-      });
-    });
-  }
+      if (!formArea) {
+        return;
+      }
 
-  function renderAnalytics(container) {
-    const completed = state.orders.filter(
-      order => order.status === "Completed"
-    ).length;
-
-    const cancelled = state.orders.filter(
-      order => order.status === "Cancelled"
-    ).length;
-
-    const revenue = state.orders
-      .filter(order => order.status !== "Cancelled")
-      .reduce((total, order) => total + Number(order.total || 0), 0);
-
-    container.innerHTML = `
-      <div class="dashboard-cards">
-        <article class="dashboard-card">
-          <p class="card-label">Revenue</p>
-          <strong>${formatMoney(revenue)}</strong>
-          <span>Excludes cancelled orders</span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Total orders</p>
-          <strong>${state.orders.length}</strong>
-          <span>Firestore orders</span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Completed</p>
-          <strong>${completed}</strong>
-          <span>Finished orders</span>
-        </article>
-
-        <article class="dashboard-card">
-          <p class="card-label">Cancelled</p>
-          <strong>${cancelled}</strong>
-          <span>Cancelled orders</span>
-        </article>
-      </div>
-    `;
-  }
-
-  function renderSettings(container) {
-    container.innerHTML = `
-      <div class="panel narrow-panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Business details</p>
-            <h2>Settings</h2>
-          </div>
-        </div>
-
-        <form class="admin-form" id="settingsForm">
+      formArea.innerHTML = `
+        <form class="admin-form inline-form" id="orderForm">
           <label>
-            Bakery name
+            Customer name
             <input
-              name="bakeryName"
+              name="customer"
               required
               maxlength="80"
-              value="${escapeHtml(state.settings.bakeryName)}"
             >
           </label>
 
           <label>
-            Contact email
+            Item
             <input
-              name="email"
-              type="email"
-              maxlength="120"
-              value="${escapeHtml(state.settings.email)}"
+              name="item"
+              required
+              maxlength="100"
             >
           </label>
 
           <label>
-            Phone number
+            Total
             <input
-              name="phone"
-              type="tel"
-              maxlength="30"
-              value="${escapeHtml(state.settings.phone)}"
+              name="total"
+              type="number"
+              required
+              min="0"
+              step="0.01"
             >
           </label>
 
-          <button class="primary-button" type="submit">
-            Save settings
-          </button>
+          <div class="form-actions">
+            <button class="primary-button" type="submit">
+              Save order
+            </button>
+
+            <button
+              class="secondary-button"
+              id="cancelOrderButton"
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
         </form>
-      </div>
-    `;
+      `;
 
-    document
-      .getElementById("settingsForm")
-      ?.addEventListener("submit", async event => {
-        event.preventDefault();
+      document
+        .getElementById("cancelOrderButton")
+        ?.addEventListener("click", () => {
+          formArea.innerHTML = "";
+        });
 
-        const formData = new FormData(event.currentTarget);
+      document
+        .getElementById("orderForm")
+        ?.addEventListener("submit", async event => {
+          event.preventDefault();
 
-        try {
-          await setDoc(
-            doc(db, "settings", "store"),
-            {
-              business: {
-                bakeryName: String(formData.get("bakeryName")).trim(),
-                email: String(formData.get("email")).trim(),
-                phone: String(formData.get("phone")).trim()
-              },
+          const formData = new FormData(event.currentTarget);
+
+          try {
+            await addDoc(collection(db, "orders"), {
+              orderNumber: `CC-${Date.now().toString().slice(-6)}`,
+              customer: String(formData.get("customer")).trim(),
+              item: String(formData.get("item")).trim(),
+              total: Number(formData.get("total")),
+              status: "New",
+              createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
-            },
-            { merge: true }
-          );
+            });
 
-          showToast("Settings saved.");
-        } catch (error) {
-          reportError("Could not save the settings.", error);
-        }
+            showToast("Order added.");
+            formArea.innerHTML = "";
+          } catch (error) {
+            reportError("Could not add the order.", error);
+          }
+        });
+    }
+
+    function renderVacation(container) {
+      container.innerHTML = `
+        <div class="panel narrow-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Store availability</p>
+              <h2>Vacation mode</h2>
+            </div>
+
+            <span
+              class="status-badge ${
+                state.vacation.enabled
+                  ? "status-cancelled"
+                  : "status-completed"
+              }"
+            >
+              ${state.vacation.enabled ? "Enabled" : "Disabled"}
+            </span>
+          </div>
+
+          <form class="admin-form" id="vacationForm">
+            <label class="toggle-row">
+              <span>
+                <strong>Pause customer orders</strong>
+                <small>Customers will see your closure message.</small>
+              </span>
+
+              <input
+                name="enabled"
+                type="checkbox"
+                ${state.vacation.enabled ? "checked" : ""}
+              >
+            </label>
+
+            <label>
+              Closure message
+
+              <textarea
+                name="message"
+                rows="4"
+                maxlength="250"
+                required
+              >${escapeHtml(state.vacation.message)}</textarea>
+            </label>
+
+            <label>
+              Reopening date
+
+              <input
+                name="reopenDate"
+                type="date"
+                value="${escapeHtml(state.vacation.reopenDate)}"
+              >
+            </label>
+
+            <button class="primary-button" type="submit">
+              Save vacation settings
+            </button>
+          </form>
+        </div>
+      `;
+
+      document
+        .getElementById("vacationForm")
+        ?.addEventListener("submit", async event => {
+          event.preventDefault();
+
+          const formData = new FormData(event.currentTarget);
+
+          try {
+            await setDoc(
+              doc(db, "settings", "store"),
+              {
+                vacation: {
+                  enabled: formData.get("enabled") === "on",
+                  message: String(formData.get("message")).trim(),
+                  reopenDate: String(
+                    formData.get("reopenDate") || ""
+                  )
+                },
+
+                updatedAt: serverTimestamp()
+              },
+              {
+                merge: true
+              }
+            );
+
+            showToast("Vacation settings saved.");
+          } catch (error) {
+            reportError("Could not save Vacation Mode.", error);
+          }
+        });
+    }
+
+    function renderProducts(container) {
+      container.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Menu management</p>
+              <h2>Products</h2>
+            </div>
+
+            <button
+              class="primary-button"
+              id="addProductButton"
+              type="button"
+            >
+              Add product
+            </button>
+          </div>
+
+          <div id="productFormArea"></div>
+
+          <div class="product-grid">
+            ${
+              state.products.length
+                ? state.products
+                    .map(
+                      product => `
+                        <article class="product-card">
+                          <div>
+                            <span
+                              class="status-badge ${
+                                product.available
+                                  ? "status-completed"
+                                  : "status-cancelled"
+                              }"
+                            >
+                              ${
+                                product.available
+                                  ? "Available"
+                                  : "Unavailable"
+                              }
+                            </span>
+
+                            <h3>${escapeHtml(product.name)}</h3>
+                            <strong>${formatMoney(product.price)}</strong>
+                          </div>
+
+                          <div class="card-actions">
+                            <button
+                              class="secondary-button small-button"
+                              data-toggle-product="${escapeHtml(product.id)}"
+                              type="button"
+                            >
+                              ${
+                                product.available
+                                  ? "Mark unavailable"
+                                  : "Mark available"
+                              }
+                            </button>
+
+                            <button
+                              class="danger-button small-button"
+                              data-delete-product="${escapeHtml(product.id)}"
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </article>
+                      `
+                    )
+                    .join("")
+                : createEmptyState(
+                    "No products yet",
+                    "Add your first bakery product."
+                  )
+            }
+          </div>
+        </div>
+      `;
+
+      document
+        .getElementById("addProductButton")
+        ?.addEventListener("click", renderProductForm);
+
+      document.querySelectorAll("[data-toggle-product]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const product = state.products.find(item => {
+            return item.id === button.dataset.toggleProduct;
+          });
+
+          if (!product) {
+            return;
+          }
+
+          try {
+            await updateDoc(doc(db, "products", product.id), {
+              available: !product.available,
+              updatedAt: serverTimestamp()
+            });
+
+            showToast("Product availability updated.");
+          } catch (error) {
+            reportError("Could not update the product.", error);
+          }
+        });
       });
-  }
 
-  function startRealtimeListeners() {
-    const ordersQuery = query(
-      collection(db, "orders"),
-      orderBy("createdAt", "desc")
-    );
+      document.querySelectorAll("[data-delete-product]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!window.confirm("Delete this product?")) {
+            return;
+          }
 
-    onSnapshot(
-      ordersQuery,
-      snapshot => {
-        state.orders = snapshot.docs.map(documentSnapshot => ({
-          id: documentSnapshot.id,
-          ...documentSnapshot.data()
-        }));
+          try {
+            await deleteDoc(
+              doc(db, "products", button.dataset.deleteProduct)
+            );
 
-        renderApp();
-      },
-      error => {
-        reportError("Could not load orders from Firebase.", error);
+            showToast("Product deleted.");
+          } catch (error) {
+            reportError("Could not delete the product.", error);
+          }
+        });
+      });
+    }
+
+    function renderProductForm() {
+      const formArea = document.getElementById("productFormArea");
+
+      if (!formArea) {
+        return;
       }
-    );
 
-    onSnapshot(
-      collection(db, "products"),
-      snapshot => {
-        state.products = snapshot.docs.map(documentSnapshot => ({
-          id: documentSnapshot.id,
-          ...documentSnapshot.data()
-        }));
+      formArea.innerHTML = `
+        <form class="admin-form inline-form" id="productForm">
+          <label>
+            Product name
 
-        renderApp();
-      },
-      error => {
-        reportError("Could not load products from Firebase.", error);
-      }
-    );
+            <input
+              name="name"
+              required
+              maxlength="100"
+            >
+          </label>
 
-    onSnapshot(
-      collection(db, "coupons"),
-      snapshot => {
-        state.coupons = snapshot.docs.map(documentSnapshot => ({
-          id: documentSnapshot.id,
-          ...documentSnapshot.data()
-        }));
+          <label>
+            Price
 
-        renderApp();
-      },
-      error => {
-        reportError("Could not load coupons from Firebase.", error);
-      }
-    );
+            <input
+              name="price"
+              type="number"
+              required
+              min="0"
+              step="0.01"
+            >
+          </label>
 
-    onSnapshot(
-      doc(db, "settings", "store"),
-      documentSnapshot => {
-        if (documentSnapshot.exists()) {
-          const data = documentSnapshot.data();
+          <div class="form-actions">
+            <button class="primary-button" type="submit">
+              Save product
+            </button>
 
-          state.vacation = {
-            ...state.vacation,
-            ...(data.vacation || {})
-          };
+            <button
+              class="secondary-button"
+              id="cancelProductButton"
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      `;
 
-          state.settings = {
-            ...state.settings,
-            ...(data.business || {})
-          };
+      document
+        .getElementById("cancelProductButton")
+        ?.addEventListener("click", () => {
+          formArea.innerHTML = "";
+        });
+
+      document
+        .getElementById("productForm")
+        ?.addEventListener("submit", async event => {
+          event.preventDefault();
+
+          const formData = new FormData(event.currentTarget);
+
+          try {
+            await addDoc(collection(db, "products"), {
+              name: String(formData.get("name")).trim(),
+              price: Number(formData.get("price")),
+              available: true,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+
+            showToast("Product added.");
+            formArea.innerHTML = "";
+          } catch (error) {
+            reportError("Could not add the product.", error);
+          }
+        });
+    }
+
+    function renderCoupons(container) {
+      container.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Promotions</p>
+              <h2>Coupons</h2>
+            </div>
+          </div>
+
+          <form class="admin-form inline-form" id="couponForm">
+            <label>
+              Coupon code
+
+              <input
+                name="code"
+                required
+                maxlength="25"
+              >
+            </label>
+
+            <label>
+              Discount percentage
+
+              <input
+                name="discount"
+                type="number"
+                required
+                min="1"
+                max="100"
+              >
+            </label>
+
+            <button class="primary-button" type="submit">
+              Add coupon
+            </button>
+          </form>
+
+          <div class="coupon-list">
+            ${
+              state.coupons.length
+                ? state.coupons
+                    .map(
+                      coupon => `
+                        <article class="coupon-card">
+                          <div>
+                            <span
+                              class="status-badge ${
+                                coupon.active
+                                  ? "status-completed"
+                                  : "status-cancelled"
+                              }"
+                            >
+                              ${coupon.active ? "Active" : "Inactive"}
+                            </span>
+
+                            <h3>${escapeHtml(coupon.code)}</h3>
+                            <p>${Number(coupon.discount) || 0}% off</p>
+                          </div>
+
+                          <div class="card-actions">
+                            <button
+                              class="secondary-button small-button"
+                              data-toggle-coupon="${escapeHtml(coupon.id)}"
+                              type="button"
+                            >
+                              ${
+                                coupon.active
+                                  ? "Deactivate"
+                                  : "Activate"
+                              }
+                            </button>
+
+                            <button
+                              class="danger-button small-button"
+                              data-delete-coupon="${escapeHtml(coupon.id)}"
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </article>
+                      `
+                    )
+                    .join("")
+                : createEmptyState(
+                    "No coupons yet",
+                    "Create your first discount code."
+                  )
+            }
+          </div>
+        </div>
+      `;
+
+      document
+        .getElementById("couponForm")
+        ?.addEventListener("submit", async event => {
+          event.preventDefault();
+
+          const formData = new FormData(event.currentTarget);
+
+          try {
+            await addDoc(collection(db, "coupons"), {
+              code: String(formData.get("code"))
+                .trim()
+                .toUpperCase(),
+
+              discount: Number(formData.get("discount")),
+              active: true,
+              createdAt: serverTimestamp()
+            });
+
+            event.currentTarget.reset();
+            showToast("Coupon added.");
+          } catch (error) {
+            reportError("Could not add the coupon.", error);
+          }
+        });
+
+      document.querySelectorAll("[data-toggle-coupon]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const coupon = state.coupons.find(item => {
+            return item.id === button.dataset.toggleCoupon;
+          });
+
+          if (!coupon) {
+            return;
+          }
+
+          try {
+            await updateDoc(doc(db, "coupons", coupon.id), {
+              active: !coupon.active
+            });
+
+            showToast("Coupon updated.");
+          } catch (error) {
+            reportError("Could not update the coupon.", error);
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-delete-coupon]").forEach(button => {
+        button.addEventListener("click", async () => {
+          try {
+            await deleteDoc(
+              doc(db, "coupons", button.dataset.deleteCoupon)
+            );
+
+            showToast("Coupon deleted.");
+          } catch (error) {
+            reportError("Could not delete the coupon.", error);
+          }
+        });
+      });
+    }
+
+    function renderAnalytics(container) {
+      const completed = state.orders.filter(order => {
+        return order.status === "Completed";
+      }).length;
+
+      const cancelled = state.orders.filter(order => {
+        return order.status === "Cancelled";
+      }).length;
+
+      const revenue = state.orders
+        .filter(order => {
+          return order.status !== "Cancelled";
+        })
+        .reduce((total, order) => {
+          return total + Number(order.total || 0);
+        }, 0);
+
+      container.innerHTML = `
+        <div class="dashboard-cards">
+          <article class="dashboard-card">
+            <p class="card-label">Revenue</p>
+            <strong>${formatMoney(revenue)}</strong>
+            <span>Excludes cancelled orders</span>
+          </article>
+
+          <article class="dashboard-card">
+            <p class="card-label">Total orders</p>
+            <strong>${state.orders.length}</strong>
+            <span>Firestore orders</span>
+          </article>
+
+          <article class="dashboard-card">
+            <p class="card-label">Completed</p>
+            <strong>${completed}</strong>
+            <span>Finished orders</span>
+          </article>
+
+          <article class="dashboard-card">
+            <p class="card-label">Cancelled</p>
+            <strong>${cancelled}</strong>
+            <span>Cancelled orders</span>
+          </article>
+        </div>
+      `;
+    }
+
+    function renderSettings(container) {
+      container.innerHTML = `
+        <div class="panel narrow-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Business details</p>
+              <h2>Settings</h2>
+            </div>
+          </div>
+
+          <form class="admin-form" id="settingsForm">
+            <label>
+              Bakery name
+
+              <input
+                name="bakeryName"
+                required
+                maxlength="80"
+                value="${escapeHtml(state.settings.bakeryName)}"
+              >
+            </label>
+
+            <label>
+              Contact email
+
+              <input
+                name="email"
+                type="email"
+                maxlength="120"
+                value="${escapeHtml(state.settings.email)}"
+              >
+            </label>
+
+            <label>
+              Phone number
+
+              <input
+                name="phone"
+                type="tel"
+                maxlength="30"
+                value="${escapeHtml(state.settings.phone)}"
+              >
+            </label>
+
+            <button class="primary-button" type="submit">
+              Save settings
+            </button>
+          </form>
+        </div>
+      `;
+
+      document
+        .getElementById("settingsForm")
+        ?.addEventListener("submit", async event => {
+          event.preventDefault();
+
+          const formData = new FormData(event.currentTarget);
+
+          try {
+            await setDoc(
+              doc(db, "settings", "store"),
+              {
+                business: {
+                  bakeryName: String(
+                    formData.get("bakeryName")
+                  ).trim(),
+
+                  email: String(formData.get("email")).trim(),
+                  phone: String(formData.get("phone")).trim()
+                },
+
+                updatedAt: serverTimestamp()
+              },
+              {
+                merge: true
+              }
+            );
+
+            showToast("Settings saved.");
+          } catch (error) {
+            reportError("Could not save the settings.", error);
+          }
+        });
+    }
+
+    function startRealtimeListeners() {
+      const ordersQuery = query(
+        collection(db, "orders"),
+        orderBy("createdAt", "desc")
+      );
+
+      onSnapshot(
+        ordersQuery,
+        snapshot => {
+          state.orders = snapshot.docs.map(documentSnapshot => ({
+            id: documentSnapshot.id,
+            ...documentSnapshot.data()
+          }));
+
+          renderApp();
+        },
+        error => {
+          reportError("Could not load orders from Firebase.", error);
         }
+      );
 
-        renderApp();
-      },
-      error => {
-        reportError("Could not load store settings.", error);
-      }
-    );
+      onSnapshot(
+        collection(db, "products"),
+        snapshot => {
+          state.products = snapshot.docs.map(documentSnapshot => ({
+            id: documentSnapshot.id,
+            ...documentSnapshot.data()
+          }));
+
+          renderApp();
+        },
+        error => {
+          reportError("Could not load products from Firebase.", error);
+        }
+      );
+
+      onSnapshot(
+        collection(db, "coupons"),
+        snapshot => {
+          state.coupons = snapshot.docs.map(documentSnapshot => ({
+            id: documentSnapshot.id,
+            ...documentSnapshot.data()
+          }));
+
+          renderApp();
+        },
+        error => {
+          reportError("Could not load coupons from Firebase.", error);
+        }
+      );
+
+      onSnapshot(
+        doc(db, "settings", "store"),
+        documentSnapshot => {
+          if (documentSnapshot.exists()) {
+            const data = documentSnapshot.data();
+
+            state.vacation = {
+              ...state.vacation,
+              ...(data.vacation || {})
+            };
+
+            state.settings = {
+              ...state.settings,
+              ...(data.business || {})
+            };
+          }
+
+          renderApp();
+        },
+        error => {
+          reportError("Could not load store settings.", error);
+        }
+      );
+    }
+
+    renderApp();
+    startRealtimeListeners();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize, {
+      once: true
+    });
+  } else {
+    initialize();
   }
-
-  renderApp();
-  startRealtimeListeners();
-});
+}
